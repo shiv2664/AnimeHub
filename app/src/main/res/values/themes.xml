@@ -5,5 +5,9 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
+    <style name="RoundedSquare">
+        <item name="cornerSize">3%</item>
+    </style>
+
     <style name="Theme.AnimeHub" parent="Base.Theme.AnimeHub" />
 </resources>
