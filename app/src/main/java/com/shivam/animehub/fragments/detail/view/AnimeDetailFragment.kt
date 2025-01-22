@@ -1,5 +1,9 @@
 package com.shivam.animehub.fragments.detail.view
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -49,84 +53,88 @@ class AnimeDetailFragment : Fragment() {
                 findNavController().navigateUp()
             }
 
-            viewLifecycleOwner.lifecycleScope.launch {
-                val details = viewModel.getAnimeDetails("https://api.jikan.moe/v4/anime/$id")
-                Glide.with(requireContext()).load(details?.data?.images?.webp?.large_image_url)
-                    .into(binding.posterImageView)
-                binding.titleTextView.text = details?.data?.title
-                binding.ratingTextView.text = details?.data?.rating
-                binding.descTextView.text = details?.data?.synopsis
+            if (isNetworkAvailable(requireContext())){
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val details = viewModel.getAnimeDetails("https://api.jikan.moe/v4/anime/$id")
+                    Glide.with(requireContext()).load(details?.data?.images?.webp?.large_image_url)
+                        .into(binding.posterImageView)
+                    binding.titleTextView.text = details?.data?.title
+                    binding.ratingTextView.text = details?.data?.rating
+                    binding.descTextView.text = details?.data?.synopsis
 
-                binding.youtubePlayerView.addYouTubePlayerListener(object : YouTubePlayerListener {
-                    override fun onApiChange(youTubePlayer: YouTubePlayer) {
+                    binding.youtubePlayerView.addYouTubePlayerListener(object : YouTubePlayerListener {
+                        override fun onApiChange(youTubePlayer: YouTubePlayer) {
 
-                    }
+                        }
 
-                    override fun onCurrentSecond(
-                        youTubePlayer: YouTubePlayer,
-                        second: Float
-                    ) {
+                        override fun onCurrentSecond(
+                            youTubePlayer: YouTubePlayer,
+                            second: Float
+                        ) {
 
-                    }
+                        }
 
-                    override fun onError(
-                        youTubePlayer: YouTubePlayer,
-                        error: PlayerConstants.PlayerError
-                    ) {
+                        override fun onError(
+                            youTubePlayer: YouTubePlayer,
+                            error: PlayerConstants.PlayerError
+                        ) {
 
-                    }
+                        }
 
-                    override fun onPlaybackQualityChange(
-                        youTubePlayer: YouTubePlayer,
-                        playbackQuality: PlayerConstants.PlaybackQuality
-                    ) {
+                        override fun onPlaybackQualityChange(
+                            youTubePlayer: YouTubePlayer,
+                            playbackQuality: PlayerConstants.PlaybackQuality
+                        ) {
 
-                    }
+                        }
 
-                    override fun onPlaybackRateChange(
-                        youTubePlayer: YouTubePlayer,
-                        playbackRate: PlayerConstants.PlaybackRate
-                    ) {
+                        override fun onPlaybackRateChange(
+                            youTubePlayer: YouTubePlayer,
+                            playbackRate: PlayerConstants.PlaybackRate
+                        ) {
 
-                    }
+                        }
 
-                    override fun onReady(youTubePlayer: YouTubePlayer) {
+                        override fun onReady(youTubePlayer: YouTubePlayer) {
 
-                        youTubePlayer.loadVideo(details?.data?.trailer?.youtube_id.toString(), 0f)
+                            youTubePlayer.loadVideo(details?.data?.trailer?.youtube_id.toString(), 0f)
 
-                    }
+                        }
 
-                    override fun onStateChange(
-                        youTubePlayer: YouTubePlayer,
-                        state: PlayerConstants.PlayerState
-                    ) {
+                        override fun onStateChange(
+                            youTubePlayer: YouTubePlayer,
+                            state: PlayerConstants.PlayerState
+                        ) {
 
-                    }
+                        }
 
-                    override fun onVideoDuration(
-                        youTubePlayer: YouTubePlayer,
-                        duration: Float
-                    ) {
+                        override fun onVideoDuration(
+                            youTubePlayer: YouTubePlayer,
+                            duration: Float
+                        ) {
 
-                    }
+                        }
 
-                    override fun onVideoId(
-                        youTubePlayer: YouTubePlayer,
-                        videoId: String
-                    ) {
+                        override fun onVideoId(
+                            youTubePlayer: YouTubePlayer,
+                            videoId: String
+                        ) {
 
-                    }
+                        }
 
-                    override fun onVideoLoadedFraction(
-                        youTubePlayer: YouTubePlayer,
-                        loadedFraction: Float
-                    ) {
+                        override fun onVideoLoadedFraction(
+                            youTubePlayer: YouTubePlayer,
+                            loadedFraction: Float
+                        ) {
 
-                    }
-                })
+                        }
+                    })
 
+
+                }
 
             }
+
 
             return binding.root
         }else{
@@ -139,4 +147,27 @@ class AnimeDetailFragment : Fragment() {
         super.onDestroy()
         _binding=null
     }
+
+    fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val networkCapabilities = connectivityManager.activeNetwork ?: return false
+            val activeNetwork =
+                connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
+
+            return when {
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                // For other devices which may have different transports
+                else -> false
+            }
+        } else {
+            val networkInfo = connectivityManager.activeNetworkInfo
+            return networkInfo?.isConnected == true
+        }
+    }
+
+
 }

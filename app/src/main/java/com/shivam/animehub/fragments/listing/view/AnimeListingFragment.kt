@@ -1,5 +1,9 @@
 package com.shivam.animehub.fragments.listing.view
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Bundle
 import com.shivam.animehub.R
 import android.view.LayoutInflater
@@ -47,9 +51,12 @@ class AnimeListingFragment : Fragment() {
             })
 
             initRecyclerView()
-            viewLifecycleOwner.lifecycleScope.launch{
-                val result=viewModel.getAnimeListing(url)
-                animeListAdapter?.setContext(requireContext(),result?.data)
+            if (isNetworkAvailable(requireContext())){
+                viewLifecycleOwner.lifecycleScope.launch{
+                    val result=viewModel.getAnimeListing(url)
+                    animeListAdapter?.setContext(requireContext(),result?.data)
+                }
+
             }
 
 
@@ -73,4 +80,26 @@ class AnimeListingFragment : Fragment() {
         super.onDestroy()
         _binding=null
     }
+
+    fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val networkCapabilities = connectivityManager.activeNetwork ?: return false
+            val activeNetwork =
+                connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
+
+            return when {
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                // For other devices which may have different transports
+                else -> false
+            }
+        } else {
+            val networkInfo = connectivityManager.activeNetworkInfo
+            return networkInfo?.isConnected == true
+        }
+    }
+
 }
